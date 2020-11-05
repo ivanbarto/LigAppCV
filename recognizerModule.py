@@ -1,6 +1,5 @@
 import cv2
 import os
-import numpy as np
 
 
 def start_recogntion_camera():
@@ -54,6 +53,7 @@ def start_recogntion_camera():
         # if k == 27:
         #    break
         if cv2.waitKey(1) & 0xFF == ord('q'):
+
             break
 
     cap.release()

@@ -16,7 +16,6 @@ PATH_FOLDER_PLAYERS = 'faces/data/'
 
 faceCascade = cv2.CascadeClassifier("resources/haarcascade_frontalface_default.xml")
 
-
 # LE PASAS UNA IMAGEN Y LA GUARDA
 def write_file(filename, data):
     person_directory = PATH_FOLDER_PLAYERS + filename
@@ -79,10 +78,24 @@ class DataBaseConnection:
             print('Teams ID saved.')
             self.select_players(teamId1)
             self.select_players(teamId2)
+            self.update_match_state(code)
             self.train_model()
 
         except Exception as e:
             print('ERROR: getting teams from database.')
+            raise
+
+    def update_match_state(self, match_code):
+        SQL = "UPDATE matches SET state='jugado', accessCode=NULL WHERE accessCode=%s"
+        print('updating match properties...')
+        try:
+
+            self.cursor.execute(SQL, match_code)
+            self.connection.commit()
+            print('properties updated. Process finished')
+        except Exception as e:
+            print('ERROR: match properties update.')
+            print(e)
             raise
 
     def select_players(self, teamId):
