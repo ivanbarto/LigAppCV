@@ -44,7 +44,9 @@ def write_file(filename, data):
         os.remove(person_photo_path)
         os.removedirs(person_directory)
 
+
 class DataBaseConnection:
+
     def __init__(self):
         self.connection = pymysql.connect(
             host=DATABASE_HOST,
@@ -53,14 +55,35 @@ class DataBaseConnection:
             db=DATABASE_NAME
         )
 
+        self.bannedPlayersNameList = []
+
         self.cursor = self.connection.cursor()
 
-        print("connection to database succesfully")
+        print("connection to database successfully")
 
     # obtiene la foto de jugadores de un team en particualr
 
     def get_instance(self):
         return self
+
+    def get_teams(self, access_code):
+        print('getting teams from database...')
+        sql = 'SELECT idTeam1,idTeam2 FROM matches WHERE accessCode = %s'
+        code = access_code
+        try:
+            self.cursor.execute(sql, code)
+            teams = self.cursor.fetchone()
+            teamId1 = teams[0]
+            teamId2 = teams[1]
+
+            print('Teams ID saved.')
+            self.select_players(teamId1)
+            self.select_players(teamId2)
+            self.train_model()
+
+        except Exception as e:
+            print('ERROR: getting teams from database.')
+            raise
 
     def select_players(self, teamId):
         print('getting players from database...')
@@ -75,7 +98,11 @@ class DataBaseConnection:
                 # el index 10 tiene la foto
                 if not player[10] == None:
                     print('     formatting player\'s face')
-                    playerCompleteName = player[1] + " " + player[2]
+                    if player[7]:
+                        playerCompleteName = player[1] + " " + player[2] + " - NO HABILITADO"
+                    else:
+                        playerCompleteName = player[1] + " " + player[2]
+
                     image = player[10]
                     write_file(playerCompleteName, image)
             print('Process finished.')
@@ -84,6 +111,7 @@ class DataBaseConnection:
             print('ERROR: getting players from database.')
             raise
 
+    def train_model(self):
         recognitionTrainer.train_model()
 
     # obtiene la foto de todos los jugadores QUE TENGAN FOTO
