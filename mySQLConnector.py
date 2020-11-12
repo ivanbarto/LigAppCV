@@ -88,7 +88,7 @@ class DataBaseConnection:
             raise
 
     def update_match_state(self, match_code):
-        SQL = "UPDATE matches SET state='jugado', accessCode=NULL WHERE accessCode=%s"
+        SQL = "UPDATE matches SET state='Jugado', accessCode=NULL WHERE accessCode=%s"
         print('updating match properties...')
         try:
 
