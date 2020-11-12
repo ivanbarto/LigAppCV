@@ -16,6 +16,7 @@ PATH_FOLDER_PLAYERS = 'faces/data/'
 
 faceCascade = cv2.CascadeClassifier("resources/haarcascade_frontalface_default.xml")
 
+
 # LE PASAS UNA IMAGEN Y LA GUARDA
 def write_file(filename, data):
     person_directory = PATH_FOLDER_PLAYERS + filename
@@ -83,6 +84,7 @@ class DataBaseConnection:
 
         except Exception as e:
             print('ERROR: getting teams from database.')
+            print(e)
             raise
 
     def update_match_state(self, match_code):
@@ -95,6 +97,24 @@ class DataBaseConnection:
             print('properties updated. Process finished')
         except Exception as e:
             print('ERROR: match properties update.')
+            print(e)
+            raise
+
+    def update_suspended_player(self, playerId, numberOfSuspensionRemaining):
+        isStillSuspended = True
+        if numberOfSuspensionRemaining == 0:
+            isStillSuspended = False
+            numberOfSuspensionRemaining = None
+
+        sql = 'UPDATE player SET isSuspended=%s, numberOfSuspensionDays=%s WHERE idPlayer=%s'
+
+        try:
+            self.cursor.execute(sql, (isStillSuspended, numberOfSuspensionRemaining, playerId))
+            self.connection.commit()
+            print('             player properties updated.')
+
+        except Exception as e:
+            print('ERROR: updatting player properties.')
             print(e)
             raise
 
@@ -113,6 +133,8 @@ class DataBaseConnection:
                     print('     formatting player\'s face')
                     if player[7]:
                         playerCompleteName = player[1] + " " + player[2] + " - NO HABILITADO"
+                        suspensionsRemaining = int(player[8])-1
+                        self.update_suspended_player(player[0], suspensionsRemaining)
                     else:
                         playerCompleteName = player[1] + " " + player[2]
 
@@ -127,29 +149,5 @@ class DataBaseConnection:
     def train_model(self):
         recognitionTrainer.train_model()
 
-    # obtiene la foto de todos los jugadores QUE TENGAN FOTO
-    # def select_players(self):
-    #     sql = GET_ALL_PLAYERS_QUERY
-    #     try:
-    #         self.cursor.execute(sql)
-    #         user = self.cursor.fetchall()
-    #
-    #         for player in user:
-    #             print("Id:", player[0])
-    #             print("Name:", player[1])
-    #             print("lastname: ",player[3])
-    #             # el index 10 tiene la foto
-    #
-    #             if not player[10] == None:
-    #                 playerName = player[1]
-    #                 playerLastname = player[2]
-    #                 playerCompleteName = playerName + " " + playerLastname
-    #                 image = player[10]
-    #                 write_file(playerCompleteName, image)
-    #
-    #     except Exception as e:
-    #         raise
-
 
 database = DataBaseConnection()
-# database.select_players(1)
