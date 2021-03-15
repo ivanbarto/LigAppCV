@@ -14,11 +14,11 @@ fontFooter = font.Font(weight="bold")
 fontLbl = font.Font(weight="bold", size="20")
 fontBtn = font.Font(weight="bold", size="10")
 
-lblAppVersion = tkinter.Label(window, text="LigApp - V 1.1", bg="#11125c", fg="white")
+lblAppVersion = tkinter.Label(window, text="LigApp - V 1.3", bg="#11125c", fg="white")
 lblAppVersion['font'] = fontFooter
 lblAppVersion.pack(side=tkinter.BOTTOM, fill=tkinter.X)
 
-lblInputCode = tkinter.Label(window, text="Código del equipo", anchor='center', bg='black', fg="white")
+lblInputCode = tkinter.Label(window, text="Código del partido", anchor='center', bg='black', fg="white")
 lblInputCode['font'] = fontLbl
 entGameCode = tkinter.Entry(window, font="Helvetica 24", justify='center', bg='#535c52', fg='white', width=10)
 
@@ -38,7 +38,7 @@ def get_game_code():
     lblWait.pack()
     game_id = entGameCode.get()
     try:
-        DataBaseConnection.select_players(DataBaseConnection(), game_id)
+        DataBaseConnection.get_teams(DataBaseConnection(), game_id)
         lblWait['text'] = "Datos listos. Abriendo cámara..."
     except Exception as e:
         lblWait['text'] = "Ocurrió un error. Por favor, inténtalo de nuevo."

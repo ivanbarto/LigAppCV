@@ -44,7 +44,9 @@ def write_file(filename, data):
         os.remove(person_photo_path)
         os.removedirs(person_directory)
 
+
 class DataBaseConnection:
+
     def __init__(self):
         self.connection = pymysql.connect(
             host=DATABASE_HOST,
@@ -53,14 +55,68 @@ class DataBaseConnection:
             db=DATABASE_NAME
         )
 
+        self.bannedPlayersNameList = []
+
         self.cursor = self.connection.cursor()
 
-        print("connection to database succesfully")
+        print("connection to database successfully")
 
     # obtiene la foto de jugadores de un team en particualr
 
     def get_instance(self):
         return self
+
+    def get_teams(self, access_code):
+        print('getting teams from database...')
+        sql = 'SELECT idTeam1,idTeam2 FROM matches WHERE accessCode = %s'
+        code = access_code
+        try:
+            self.cursor.execute(sql, code)
+            teams = self.cursor.fetchone()
+            teamId1 = teams[0]
+            teamId2 = teams[1]
+
+            print('Teams ID saved.')
+            self.select_players(teamId1)
+            self.select_players(teamId2)
+            self.update_match_state(code)
+            self.train_model()
+
+        except Exception as e:
+            print('ERROR: getting teams from database.')
+            print(e)
+            raise
+
+    def update_match_state(self, match_code):
+        SQL = "UPDATE matches SET state='Jugado' WHERE accessCode=%s"
+        print('updating match properties...')
+        try:
+
+            self.cursor.execute(SQL, match_code)
+            self.connection.commit()
+            print('properties updated. Process finished')
+        except Exception as e:
+            print('ERROR: match properties update.')
+            print(e)
+            raise
+
+    def update_suspended_player(self, playerId, numberOfSuspensionRemaining):
+        isStillSuspended = True
+        if numberOfSuspensionRemaining == 0:
+            isStillSuspended = False
+            numberOfSuspensionRemaining = None
+
+        sql = 'UPDATE player SET isSuspended=%s, numberOfSuspensionDays=%s WHERE idPlayer=%s'
+
+        try:
+            self.cursor.execute(sql, (isStillSuspended, numberOfSuspensionRemaining, playerId))
+            self.connection.commit()
+            print('             player properties updated.')
+
+        except Exception as e:
+            print('ERROR: updatting player properties.')
+            print(e)
+            raise
 
     def select_players(self, teamId):
         print('getting players from database...')
@@ -75,7 +131,13 @@ class DataBaseConnection:
                 # el index 10 tiene la foto
                 if not player[10] == None:
                     print('     formatting player\'s face')
-                    playerCompleteName = player[1] + " " + player[2]
+                    if player[7]:
+                        playerCompleteName = player[1] + " " + player[2] + " - NO HABILITADO"
+                        suspensionsRemaining = int(player[8])-1
+                        self.update_suspended_player(player[0], suspensionsRemaining)
+                    else:
+                        playerCompleteName = player[1] + " " + player[2]
+
                     image = player[10]
                     write_file(playerCompleteName, image)
             print('Process finished.')
@@ -84,31 +146,8 @@ class DataBaseConnection:
             print('ERROR: getting players from database.')
             raise
 
+    def train_model(self):
         recognitionTrainer.train_model()
-
-    # obtiene la foto de todos los jugadores QUE TENGAN FOTO
-    # def select_players(self):
-    #     sql = GET_ALL_PLAYERS_QUERY
-    #     try:
-    #         self.cursor.execute(sql)
-    #         user = self.cursor.fetchall()
-    #
-    #         for player in user:
-    #             print("Id:", player[0])
-    #             print("Name:", player[1])
-    #             print("lastname: ",player[3])
-    #             # el index 10 tiene la foto
-    #
-    #             if not player[10] == None:
-    #                 playerName = player[1]
-    #                 playerLastname = player[2]
-    #                 playerCompleteName = playerName + " " + playerLastname
-    #                 image = player[10]
-    #                 write_file(playerCompleteName, image)
-    #
-    #     except Exception as e:
-    #         raise
 
 
 database = DataBaseConnection()
-# database.select_players(1)

@@ -1,6 +1,5 @@
 import cv2
 import os
-import numpy as np
 
 
 def start_recogntion_camera():
@@ -31,20 +30,30 @@ def start_recogntion_camera():
             face = cv2.resize(face, (150, 150), interpolation=cv2.INTER_CUBIC)
             result = face_recognizer.predict(face)
 
-            cv2.putText(frame, '{}'.format(result), (x, y - 5), 1, 1.3, (255, 255, 0), 1, cv2.LINE_AA)
+           # cv2.putText(frame, '{}'.format(result), (x, y - 5), 1, 1.3, (255, 255, 0), 1, cv2.LINE_AA)
 
             if result[1] < 5000:
-                cv2.putText(frame, '{}'.format(peopleList[result[0]]), (x, y - 25), 2, 1.1, (0, 255, 0), 1, cv2.LINE_AA)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                if peopleList[result[0]].__contains__("NO HABILITADO"):
+                    cv2.putText(frame, '{}'.format(peopleList[result[0]]), (x, y - 25), 2, 0.5, (0, 0, 255), 1,
+                                cv2.LINE_AA)
+
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                else:
+                    cv2.putText(frame, '{}'.format(peopleList[result[0]]), (x, y - 25), 2, 0.5, (0, 255, 0), 1,
+                                cv2.LINE_AA)
+
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
             else:
-                cv2.putText(frame, "desconocido", (x, y - 20), 2, 0.8, (0, 0, 255), 1, cv2.LINE_AA)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                cv2.putText(frame, "desconocido", (x, y - 20), 2, 0.8, (255, 255, 0), 1, cv2.LINE_AA)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 255, 0), 2)
 
         cv2.imshow("Frame", frame)
         # k = cv2.waitKey(1)
         # if k == 27:
         #    break
         if cv2.waitKey(1) & 0xFF == ord('q'):
+
             break
 
     cap.release()
